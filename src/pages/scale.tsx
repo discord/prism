@@ -172,8 +172,7 @@ export function Scale({
                         writingMode: 'vertical-lr',
                         whiteSpace: 'nowrap',
                         textAlign: 'right',
-                        marginInlineEnd: 5,
-                        lineHeight: 1
+                        marginInlineEnd: 5
                       }}
                     >
                       {contrastScore}{' '}
