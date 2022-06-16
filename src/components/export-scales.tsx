@@ -14,28 +14,36 @@ type ExportScalesProps = {
 
 export function ExportScales({palette}: ExportScalesProps) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const hexScales = React.useMemo(
-    () =>
-      Object.values(palette.scales).reduce<Record<string, string | string[]>>((acc, scale) => {
-        let key = camelCase(scale.name)
-        let i = 1
+  const hexScales = React.useMemo(() => {
+    const {scales, curves, namingSchemes} = palette
 
-        while (key in acc) {
-          i++
-          key = `${camelCase(scale.name)}${i}`
-        }
-
-        const colors = scale.colors.map((_, index) => getColor(palette.curves, scale, index)).map(colorToHex)
-
-        acc[key] = colors.length === 1 ? colors[0] : colors
-        return acc
-      }, {}),
-    [palette.curves, palette.scales]
-  )
+    return Object.values(scales).reduce<Record<string, string | {[name: string]: string}>>((acc, scale) => {
+      let key = camelCase(scale.name)
+      let i = 1
+      while (key in acc) {
+        i++
+        key = `${camelCase(scale.name)}${i}`
+      }
+      const colors = scale.colors.map((_, index) => getColor(curves, scale, index)).map(colorToHex)
+      const namingScheme = namingSchemes[scale.namingSchemeId || '']
+      const colorsWithNames = Object.fromEntries(
+        colors.map((color, index) => [namingScheme ? namingScheme.names[index] : index.toString(), color])
+      )
+      acc[key] = colors.length === 1 ? colors[0] : colorsWithNames
+      return acc
+    }, {} as any)
+  }, [palette])
 
   const code = React.useMemo(() => JSON.stringify(hexScales, null, 2), [hexScales])
 
   const svg = React.useMemo(() => generateSvg(hexScales), [hexScales])
+
+  const figmaTokens = React.useMemo(() => JSON.stringify(generateFigmaTokens(hexScales), null, 2), [hexScales])
+
+  const styleDictionaryTokens = React.useMemo(
+    () => JSON.stringify(generateStyleDictionaryTokens(hexScales), null, 2),
+    [hexScales]
+  )
 
   return (
     <>
@@ -60,6 +68,8 @@ export function ExportScales({palette}: ExportScalesProps) {
             >
               <PrimerButton onClick={() => copy(code)}>Copy JSON</PrimerButton>
               <PrimerButton onClick={() => copy(svg)}>Copy SVG</PrimerButton>
+              <PrimerButton onClick={() => copy(figmaTokens)}>Copy Figma Tokens</PrimerButton>
+              <PrimerButton onClick={() => copy(styleDictionaryTokens)}>Copy Style Dictionary Tokens</PrimerButton>
             </div>
           </VStack>
         </Dialog>
@@ -68,20 +78,20 @@ export function ExportScales({palette}: ExportScalesProps) {
   )
 }
 
-function generateSvg(scales: Record<string, string | string[]>) {
+function generateSvg(scales: Record<string, string | {[name: string]: string}>) {
   const rectWidth = 200
   const rectHeight = 50
 
   const width = Object.values(scales).length * rectWidth
   const height =
     Object.values(scales).reduce((acc, colors) => {
-      const colorsArray = Array.isArray(colors) ? colors : [colors]
+      const colorsArray = typeof colors === 'string' ? [colors] : Object.values(colors)
       return Math.max(colorsArray.length, acc)
     }, 0) * rectHeight
 
   return `<svg viewBox="0 0 ${width} ${height}">
   ${Object.entries(scales).map(([key, colors], index) => {
-    const colorsArray = Array.isArray(colors) ? colors : [colors]
+    const colorsArray = typeof colors === 'string' ? [colors] : Object.values(colors)
     return `<g id="${key}">
     ${colorsArray
       .map((color, i) => {
@@ -93,4 +103,44 @@ function generateSvg(scales: Record<string, string | string[]>) {
   </g>`
   })}
 </svg>`
+}
+
+function generateFigmaTokens(scales: Record<string, string | {[name: string]: string}>) {
+  const result: any = {}
+
+  for (const [scaleName, scale] of Object.entries(scales)) {
+    const kebabScaleName = scaleName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+
+    result[kebabScaleName] = {}
+
+    if (typeof scale === 'string') {
+      result[kebabScaleName] = {value: scale}
+    } else {
+      for (const [colorName, color] of Object.entries(scale)) {
+        result[kebabScaleName][colorName] = {value: color, type: 'color'}
+      }
+    }
+  }
+
+  return result
+}
+
+function generateStyleDictionaryTokens(scales: Record<string, string | {[name: string]: string}>) {
+  const result: any = {}
+
+  for (const [scaleName, scale] of Object.entries(scales)) {
+    const kebabScaleName = scaleName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+
+    result[kebabScaleName] = {}
+
+    if (typeof scale === 'string') {
+      result[kebabScaleName] = {value: scale}
+    } else {
+      for (const [colorName, color] of Object.entries(scale)) {
+        result[kebabScaleName][colorName] = {value: color}
+      }
+    }
+  }
+
+  return result
 }

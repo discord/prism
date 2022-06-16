@@ -40,7 +40,13 @@ export function ImportScales({onImport}: ImportScalesProps) {
           throw new Error(`Please provide at least one color for ${name} scale`)
         }
 
-        return {id, name, colors: scaleArray.map(hexToColor), curves: {}}
+        return {
+          id,
+          name,
+          colors: scaleArray.map(hexToColor),
+          curves: {},
+          namingSchemeId: null
+        }
       })
 
       onImport(keyBy(scales, 'id'), replace)
