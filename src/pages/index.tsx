@@ -12,9 +12,11 @@ import {
 import {Link, RouteComponentProps} from '@reach/router'
 import {mix, readableColor} from 'color2k'
 import {IconButton} from '../components/button'
+import {RestoreBackup} from '../components/restore-backup'
+import {HStack} from '../components/stack'
 import {routePrefix} from '../constants'
 import {useGlobalState} from '../global-state'
-import {colorToHex, getColor} from '../utils'
+import {colorToHex, createAndDownloadBackup, getColor} from '../utils'
 
 export function Index(props: RouteComponentProps) {
   const [state, send] = useGlobalState()
@@ -47,12 +49,16 @@ export function Index(props: RouteComponentProps) {
             GitHub
             <StyledOcticon icon={LinkExternalIcon} sx={{marginLeft: 1}} />
           </PrimerLink>
-          <PrimerIconButton
-            aria-label="Create new palette"
-            icon={PlusIcon}
-            onClick={() => send('CREATE_PALETTE')}
-            sx={{margin: 0}}
-          />
+          <HStack spacing={8}>
+            <PrimerIconButton
+              aria-label="Create new palette"
+              icon={PlusIcon}
+              onClick={() => send('CREATE_PALETTE')}
+              sx={{margin: 0}}
+            />
+            <RestoreBackup />
+            <Button onClick={() => createAndDownloadBackup()}>Create backup</Button>
+          </HStack>
         </Box>
       </Box>
       <Box sx={{p: 3}}>

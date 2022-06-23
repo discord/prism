@@ -12,7 +12,7 @@ import {Color, Curve, Palette, Scale, NamingScheme} from './types'
 import {getColor, hexToColor, randomIntegerInRange, lerp} from './utils'
 import {routePrefix} from './constants'
 
-const GLOBAL_STATE_KEY = 'global_state'
+export const GLOBAL_STATE_KEY = 'global_state'
 
 type MachineContext = {
   palettes: Record<string, Palette>
