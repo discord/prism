@@ -315,6 +315,13 @@ export function Scale({
             >
               Delete scale
             </Button>
+            <Button
+              onClick={() => {
+                send({type: 'DUPLICATE_SCALE', paletteId, scaleId})
+              }}
+            >
+              Duplicate scale
+            </Button>
           </VStack>
         </SidebarPanel>
         <Separator />

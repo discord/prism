@@ -223,6 +223,14 @@ export function Palette({paletteId = '', children}: React.PropsWithChildren<Rout
             <Button
               aria-label="Delete palette"
               onClick={() => {
+                send({type: 'DUPLICATE_PALETTE', paletteId})
+              }}
+            >
+              Duplicate palette
+            </Button>
+            <Button
+              aria-label="Delete palette"
+              onClick={() => {
                 send({type: 'DELETE_PALETTE', paletteId})
 
                 // Navigate to home page after deleting a palette

@@ -2,7 +2,7 @@ import {navigate} from '@reach/router'
 import {assign} from '@xstate/immer'
 import {useInterpret, useService} from '@xstate/react'
 import bezier from 'bezier-easing'
-import {debounce, isArray, keyBy} from 'lodash-es'
+import {debounce, isArray, keyBy, cloneDeep} from 'lodash-es'
 import React from 'react'
 import {v4 as uniqueId} from 'uuid'
 import {interpret, Machine} from 'xstate'
@@ -23,6 +23,10 @@ type MachineContext = {
 type MachineEvent =
   | {
       type: 'CREATE_PALETTE'
+    }
+  | {
+      type: 'DUPLICATE_PALETTE'
+      paletteId: string
     }
   | {
       type: 'DELETE_PALETTE'
@@ -50,6 +54,11 @@ type MachineEvent =
     }
   | {
       type: 'DELETE_SCALE'
+      paletteId: string
+      scaleId: string
+    }
+  | {
+      type: 'DUPLICATE_SCALE'
       paletteId: string
       scaleId: string
     }
@@ -203,6 +212,20 @@ const machine = Machine<MachineContext, MachineEvent>({
         navigate(`${routePrefix}/local/${paletteId}`)
       })
     },
+    DUPLICATE_PALETTE: {
+      actions: assign((context, event) => {
+        const existingPalette = context.palettes[event.paletteId]
+        const paletteId = uniqueId()
+
+        context.palettes[paletteId] = {
+          ...cloneDeep(existingPalette),
+          id: paletteId,
+          name: `${existingPalette.name} (copy)`
+        }
+
+        navigate(`${routePrefix}/local/${paletteId}`)
+      })
+    },
     DELETE_PALETTE: {
       target: 'debouncing',
       actions: assign((context, event) => {
@@ -252,6 +275,22 @@ const machine = Machine<MachineContext, MachineEvent>({
       target: 'debouncing',
       actions: assign((context, event) => {
         delete context.palettes[event.paletteId].scales[event.scaleId]
+      })
+    },
+    DUPLICATE_SCALE: {
+      target: 'debouncing',
+      actions: assign((context, event) => {
+        const existingScale = context.palettes[event.paletteId].scales[event.scaleId]
+
+        const scaleId = uniqueId()
+
+        context.palettes[event.paletteId].scales[scaleId] = {
+          ...cloneDeep(existingScale),
+          id: scaleId,
+          name: `${existingScale.name} (copy)`
+        }
+
+        navigate(`${routePrefix}/local/${event.paletteId}/scale/${scaleId}`)
       })
     },
     CHANGE_SCALE_NAME: {
