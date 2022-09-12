@@ -72,6 +72,7 @@ type MachineEvent =
       type: 'CREATE_COLOR'
       paletteId: string
       scaleId: string
+      afterIndex: number | null
     }
   | {
       type: 'POP_COLOR'
@@ -302,18 +303,20 @@ const machine = Machine<MachineContext, MachineEvent>({
     CREATE_COLOR: {
       target: 'debouncing',
       actions: assign((context, event) => {
-        const colors = context.palettes[event.paletteId].scales[event.scaleId].colors
-        let color = {...colors[colors.length - 1]}
+        const scale = context.palettes[event.paletteId].scales[event.scaleId]
+        const colors = scale.colors
+        const afterIndex = event.afterIndex ?? colors.length - 1
+        let color = {...colors[afterIndex]}
 
         if (!color) {
           const randomIndex = randomIntegerInRange(0, cssColorNames.length)
           const name = cssColorNames[randomIndex]
           color = hexToColor(name)
-        } else {
+        } else if (afterIndex === colors.length - 1) {
           color.lightness = Math.max(0, color.lightness - 10)
         }
 
-        context.palettes[event.paletteId].scales[event.scaleId].colors.push(color)
+        scale.colors = [...colors.slice(0, afterIndex + 1), color, ...colors.slice(afterIndex + 1)]
       })
     },
     POP_COLOR: {

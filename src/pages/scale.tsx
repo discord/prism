@@ -94,14 +94,14 @@ export function Scale({
           <ButtonGroup>
             <IconButton
               icon={DashIcon}
-              aria-label="Remove color from end of scale"
-              onClick={() => send({type: 'POP_COLOR', paletteId, scaleId})}
+              aria-label="Remove selected color from scale"
+              onClick={() => send({type: 'DELETE_COLOR', paletteId, scaleId, index: Number(selectedIndex)})}
               disabled={scale.namingSchemeId != null || scale.colors.length === 1}
             />
             <IconButton
               icon={PlusIcon}
-              aria-label="Add color to end of scale"
-              onClick={() => send({type: 'CREATE_COLOR', paletteId, scaleId})}
+              aria-label="Add color after selected color"
+              onClick={() => send({type: 'CREATE_COLOR', paletteId, scaleId, afterIndex: Number(selectedIndex)})}
               disabled={scale.namingSchemeId != null}
             />
           </ButtonGroup>
