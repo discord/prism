@@ -199,7 +199,7 @@ const machine = Machine<MachineContext, MachineEvent>({
         const scales: Scale[] = Object.entries(exampleScales).map(([name, scale]) => {
           const id = uniqueId()
           const scaleArray = isArray(scale) ? scale : [scale]
-          return {id, name, colors: scaleArray.map(hexToColor), curves: {}, namingSchemeId: null}
+          return {id, name, colors: scaleArray.map(hexToColor), curves: {}, namingSchemeId: '1'}
         })
         context.palettes[paletteId] = {
           id: paletteId,
@@ -207,7 +207,16 @@ const machine = Machine<MachineContext, MachineEvent>({
           backgroundColor: '#ffffff',
           scales: keyBy(scales, 'id'),
           curves: {},
-          namingSchemes: {}
+          namingSchemes: {
+            1: {
+              id: '1',
+              name: 'Discord 26',
+              // prettier-ignore
+              names: [
+                '100', '130', '160', '200', '230', '260', '300', '330', '345', '360', '400', '430', '460', '500', '530', '560', '600', '630', '660', '700', '730', '760', '800', '830', '860', '900'
+              ]
+            }
+          }
         }
 
         navigate(`${routePrefix}/local/${paletteId}`)

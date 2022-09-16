@@ -1,7 +1,8 @@
-import {Color, Curve, Scale} from './types'
+import {Color, Curve, Palette, Scale} from './types'
 import hsluv from 'hsluv'
 import {toHex} from 'color2k'
 import {GLOBAL_STATE_KEY} from './global-state'
+import {camelCase} from 'lodash-es'
 
 export function hexToColor(hex: string): Color {
   const [hue, saturation, lightness] = hsluv.hexToHsluv(toHex(hex)).map(value => Math.round(value * 100) / 100)
@@ -65,4 +66,28 @@ export function createAndDownloadBackup() {
   link.click()
 
   URL.revokeObjectURL(url)
+}
+
+export function getHexScales(palette: Palette) {
+  const {scales, curves, namingSchemes} = palette
+  return Object.values(scales).reduce<Record<string, string | {[name: string]: string}>>((acc, scale) => {
+    let key = camelCase(scale.name)
+    let i = 1
+
+    while (key in acc) {
+      i++
+      key = `${camelCase(scale.name)}${i}`
+    }
+
+    const colors = scale.colors.map((_, index) => getColor(curves, scale, index)).map(colorToHex)
+
+    const namingScheme = namingSchemes[scale.namingSchemeId || '']
+
+    const colorsWithNames = Object.fromEntries(
+      colors.map((color, index) => [namingScheme ? namingScheme.names[index] : index.toString(), color])
+    )
+
+    acc[key] = colors.length === 1 ? colors[0] : colorsWithNames
+    return acc
+  }, {})
 }
